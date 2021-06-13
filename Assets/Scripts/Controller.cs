@@ -61,7 +61,70 @@ public class Controller : MonoBehaviour
         }
 
         //TODO: Para cada posición, rellenar con 1's las casillas adyacentes (arriba, abajo, izquierda y derecha)
-  
+        int contadorColumnasDerecha = 7;
+        int contadorColumnasIzquierda = 0;
+        int contadorFilasDerecha = 7;
+        int contadorFilasIzquierda = 0;
+        for(int i=0;i< Constants.NumTiles; i++)//por las filas
+        {
+            contadorColumnasDerecha = 7;
+            contadorColumnasIzquierda = 0;
+            
+            
+            for (int j = 0; j < Constants.NumTiles; j++)//por las columnas
+            {
+                //tiles arriba
+                if (j == i + 8 && j < 56)//comprobamos si aun se puede poner uno mas arriba
+                {
+                    matriu[i, j] = 1;
+                }
+                //tiles bajo
+                if (j == i - 8 && j > 7)//comprobamos si se pueden poner alguno mas abajo
+                {
+                    matriu[i, j] = 1;
+                }
+
+                //contador comprobar de llegada a la izquierda
+                if (contadorColumnasIzquierda == j)
+                {
+                    contadorColumnasIzquierda = contadorColumnasIzquierda + 8;
+                }
+                // si se resta se encuentra en la izquierda 
+                if (j != contadorColumnasIzquierda && i != contadorFilasDerecha)
+                {
+                    if (i - 1 == j)
+                    {
+                        matriu[i, j] = 1;
+                    }
+                }
+               
+
+                //contador comprobacion de llegada a la derecha
+                if (contadorColumnasDerecha == j)
+                {
+                    contadorColumnasDerecha = contadorColumnasDerecha + 8;
+                }
+                if (j != contadorColumnasDerecha && i != contadorFilasDerecha)//comprobamos si esta ubicado en la derecha al sumar uno
+                {
+                    if (i + 1 == j)
+                    {
+                        matriu[i, j] = 1;
+                    }
+                }
+
+            }
+            //comprobaciones
+            if (contadorFilasDerecha == i)
+            {
+                contadorColumnasDerecha = contadorColumnasDerecha + 8;
+            }
+            if (contadorFilasIzquierda == i)//para saber si has llegado a la derecha
+            {
+                contadorColumnasIzquierda = contadorColumnasIzquierda + 8;//para saber si has llegado a la izquierda
+            }
+
+        }
+
         //TODO: Rellenar la lista "adjacency" de cada casilla con los índices de sus casillas adyacentes
 
     }
