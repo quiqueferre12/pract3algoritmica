@@ -48,26 +48,39 @@ public class Controller : MonoBehaviour
 
     public void InitAdjacencyLists()
     {
-       //TODO: Rellenar la lista "adjacency" de cada casilla con los índices de sus casillas adyacentes
-       for(int i = 0; i < tiles.Length; i++)//recorrer todas las casillas
-       {
-            if (i - 8 >= 0)//si restamos 8 y es mayor a 0 quiere decir que tiene una casilla arriba de el(adiaciencia arriba)
+        //TODO: Rellenar la lista "adjacency" de cada casilla con los índices de sus casillas adyacentes
+
+        for (int i = 0; i < Constants.NumTiles; i = i + 8)//recorremos todas las casillas a cada avance de aqui se le sumará 8 para subir a la siguiente fila
+        {
+            for (int j = i; j < Constants.TilesPerRow + i; j++)//empezamos por las filas ej: int j=8 j< 8+ 8=i
             {
-                tiles[i].adjacency.Add(i - 8);
+                if (j != i)//si es 0,8,16,24 (si no esta a la izquierda del todo )
+                {
+
+                    tiles[j].adjacency.Add(j - 1);//anyade el adyacente de la izquierda
+                }
+                if (j != Constants.TilesPerRow + i - 1)//mientras no llegue a la derecha
+                {
+                    
+                    tiles[j].adjacency.Add(j + 1);//anyade la casilla adiacente de la derecha
+                }
+                if (i == 0)//si esta bajo del todo
+                {
+
+                    tiles[j].adjacency.Add(j + 8);// solo se anyade la de arriba
+                }
+                else if (i == 56)//si se encuentra arriba del todo 
+                {
+                    tiles[j].adjacency.Add(j - 8);//se anyade solo la adiaciencia de abajo
+                }
+                else if (i != 0 && i != 56)//si no está ni en la primera ni la ultima fila
+                {
+                    tiles[j].adjacency.Add(j - 8);//anyadimos una adiaciencia abajo
+                    tiles[j].adjacency.Add(j + 8);//anyadimos una adiaciencia arriba
+                    
+                }
             }
-            if (i + 8 < tiles.Length)
-            {
-                tiles[i].adjacency.Add(i + 8);//si sumamos 8 y es menor a 64,existe casilla debajo de el(adiaciencia abajo)
-            }
-            if(i-1 >=0)//si restamos uno y es mayor o igual a 0, hay una casilla adyaciencia a la izquierda
-            {
-                tiles[i].adjacency.Add(i - 1);
-            }
-            if(i+1 < tiles.Length)
-            {
-                tiles[i].adjacency.Add(i + 1);
-            }
-       }
+        }
 
     }
 
@@ -157,8 +170,22 @@ public class Controller : MonoBehaviour
         - Movemos al caco a esa casilla
         - Actualizamos la variable currentTile del caco a la nueva casilla
         */
+        List<Tile> selectT = new List<Tile>();
+        foreach(Tile t in tiles)
+        {
+            if (t.selectable)
+            {
+                selectT.Add(t);//añado el numero de la casilla seleccionable
+                //Debug.Log(t.numTile);//comprovacion de las casillas que aparecen del rober
+            }
+        }
+            int siguienteT = Random.Range(0, selectT.Count); // selecciono una posicion del array
+            robber.GetComponent<RobberMove>().MoveToTile(selectT[siguienteT]); // Lo muevo al numero de la casilla selectable[nextTile] = numero de la casilla
+            robber.GetComponent<RobberMove>().currentTile = selectT[siguienteT].numTile;
+        
 
-        robber.GetComponent<RobberMove>().MoveToTile(tiles[robber.GetComponent<RobberMove>().currentTile]);
+
+        //robber.GetComponent<RobberMove>().MoveToTile(tiles[robber.GetComponent<RobberMove>().currentTile]); esta te mueve al centro no hace falta hacerla
     }
 
     public void EndGame(bool end)
@@ -202,35 +229,60 @@ public class Controller : MonoBehaviour
     public void FindSelectableTiles(bool cop)
     {
                  
-        int indexcurrentTile;        
-
-        if (cop==true)
-            indexcurrentTile = cops[clickedCop].GetComponent<CopMove>().currentTile;
+        int indexcurrentTile;//la casilla        
+        if (cop == true)
+        {//comprobamos si es policia
+            indexcurrentTile = cops[clickedCop].GetComponent<CopMove>().currentTile;//entra en el de policia 
+        }
         else
-            indexcurrentTile = robber.GetComponent<RobberMove>().currentTile;
-
+        {
+            indexcurrentTile = robber.GetComponent<RobberMove>().currentTile;//despues de mover el policia se mueve el robber, por eso comparten turno y comparten el metodo indexcurrentfile
+        }
         //La ponemos rosa porque acabamos de hacer un reset
         tiles[indexcurrentTile].current = true;
-
+        tiles[indexcurrentTile].parent = null;//ponemos el parent en nulo al cambiar el turno
+        tiles[indexcurrentTile].distance = 0;//la distancia la asignamos a 0 para volver a hacer las diferencias de 1 a 2 como maximo
+        tiles[indexcurrentTile].visited = true;//la distancia la visualización se pone en visible
         //Cola para el BFS
         Queue<Tile> nodes = new Queue<Tile>();
+        Tile casilla = null;//creamos un objeto casilla null para bfs
 
-        //TODO: Implementar BFS. Los nodos seleccionables los ponemos como selectable=true
-        //Tendrás que cambiar este código por el BFS
-        for(int i = 0; i < Constants.NumTiles; i++)
+        nodes.Enqueue(tiles[indexcurrentTile]);//de lista de nodes ponemos en la cola la casilla en la que estas
+        do
         {
-            tiles[i].selectable = true;
-        }
+            casilla = nodes.Dequeue();//la quitamos de la cola guarda en una variable auxiliar lo que se va a examinar
+            /*Debug.Log(casilla.numTile);*/
+            if(casilla.numTile != cops[clickedCop].GetComponent<CopMove>().currentTile)//para que al seleccionarlo no cuente como una ronda mas una vez le hagas click
+            {
+                casilla.selectable = true;
+            }
+           
+            if ((casilla.distance + 1) <= Constants.Distance)//comprobamos si la distancia de la casilla de adiacientes es 1 o 2 
+            {
+                
+                foreach (int i in casilla.adjacency)//recorremos las adiacentes de la casilla seleccionada
+                {
+                    
+                    if (tiles[i].visited == false && tiles[i].numTile != cops[0].GetComponent<CopMove>().currentTile && tiles[i].numTile != cops[1].GetComponent<CopMove>().currentTile)
+                    {
+                        tiles[i].parent = casilla;//le asignamos a el padre de la casilla adiacente para que siga el transcurso del movimiento en forma de L y no diagonales
+                        tiles[i].distance = casilla.distance + 1;//pillaria la distancia del padre y sumaria la distancia correspondiente para poder moverse
+                        tiles[i].visited = true;//ya ha pasado por ahí a cada turno se resetea
+                        nodes.Enqueue(tiles[i]);//encola las casillas seleccionables
+                    }
 
+
+                }
+            }
+        } while (nodes.Count != 0);//mientras haya casillas en la cola
 
     }
     
-   
-    
 
-    
 
-   
 
-       
+
+
+
+
 }
