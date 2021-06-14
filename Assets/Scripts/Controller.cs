@@ -14,7 +14,7 @@ public class Controller : MonoBehaviour
     public Button playAgainButton;
 
     //Otras variables
-    Tile[] tiles = new Tile[Constants.NumTiles];
+    Tile[] tiles = new Tile[Constants.NumTiles];//array de objetos tiles (todas las casillas)
     private int roundCount = 0;
     private int state;
     private int clickedTile = -1;
@@ -48,84 +48,26 @@ public class Controller : MonoBehaviour
 
     public void InitAdjacencyLists()
     {
-        //Matriz de adyacencia
-        int[,] matriu = new int[Constants.NumTiles, Constants.NumTiles];
-
-        //TODO: Inicializar matriz a 0's
-        for (int i = 0; i < Constants.NumTiles; i++)
-        {
-            for (int j = 0; j < Constants.NumTiles; j++)
+       //TODO: Rellenar la lista "adjacency" de cada casilla con los índices de sus casillas adyacentes
+       for(int i = 0; i < tiles.Length; i++)//recorrer todas las casillas
+       {
+            if (i - 8 >= 0)//si restamos 8 y es mayor a 0 quiere decir que tiene una casilla arriba de el(adiaciencia arriba)
             {
-                matriu[i, j] = 0;
+                tiles[i].adjacency.Add(i - 8);
             }
-        }
-
-        //TODO: Para cada posición, rellenar con 1's las casillas adyacentes (arriba, abajo, izquierda y derecha)
-        int contadorColumnasDerecha = 7;
-        int contadorColumnasIzquierda = 0;
-        int contadorFilasDerecha = 7;
-        int contadorFilasIzquierda = 0;
-        for(int i=0;i< Constants.NumTiles; i++)//por las filas
-        {
-            contadorColumnasDerecha = 7;
-            contadorColumnasIzquierda = 0;
-            
-            
-            for (int j = 0; j < Constants.NumTiles; j++)//por las columnas
+            if (i + 8 < tiles.Length)
             {
-                //tiles arriba
-                if (j == i + 8 && j < 56)//comprobamos si aun se puede poner uno mas arriba
-                {
-                    matriu[i, j] = 1;
-                }
-                //tiles bajo
-                if (j == i - 8 && j > 7)//comprobamos si se pueden poner alguno mas abajo
-                {
-                    matriu[i, j] = 1;
-                }
-
-                //contador comprobar de llegada a la izquierda
-                if (contadorColumnasIzquierda == j)
-                {
-                    contadorColumnasIzquierda = contadorColumnasIzquierda + 8;
-                }
-                // si se resta se encuentra en la izquierda 
-                if (j != contadorColumnasIzquierda && i != contadorFilasDerecha)
-                {
-                    if (i - 1 == j)
-                    {
-                        matriu[i, j] = 1;
-                    }
-                }
-               
-
-                //contador comprobacion de llegada a la derecha
-                if (contadorColumnasDerecha == j)
-                {
-                    contadorColumnasDerecha = contadorColumnasDerecha + 8;
-                }
-                if (j != contadorColumnasDerecha && i != contadorFilasDerecha)//comprobamos si esta ubicado en la derecha al sumar uno
-                {
-                    if (i + 1 == j)
-                    {
-                        matriu[i, j] = 1;
-                    }
-                }
-
+                tiles[i].adjacency.Add(i + 8);//si sumamos 8 y es menor a 64,existe casilla debajo de el(adiaciencia abajo)
             }
-            //comprobaciones
-            if (contadorFilasDerecha == i)
+            if(i-1 >=0)//si restamos uno y es mayor o igual a 0, hay una casilla adyaciencia a la izquierda
             {
-                contadorColumnasDerecha = contadorColumnasDerecha + 8;
+                tiles[i].adjacency.Add(i - 1);
             }
-            if (contadorFilasIzquierda == i)//para saber si has llegado a la derecha
+            if(i+1 < tiles.Length)
             {
-                contadorColumnasIzquierda = contadorColumnasIzquierda + 8;//para saber si has llegado a la izquierda
+                tiles[i].adjacency.Add(i + 1);
             }
-
-        }
-
-        //TODO: Rellenar la lista "adjacency" de cada casilla con los índices de sus casillas adyacentes
+       }
 
     }
 
@@ -215,6 +157,7 @@ public class Controller : MonoBehaviour
         - Movemos al caco a esa casilla
         - Actualizamos la variable currentTile del caco a la nueva casilla
         */
+
         robber.GetComponent<RobberMove>().MoveToTile(tiles[robber.GetComponent<RobberMove>().currentTile]);
     }
 
